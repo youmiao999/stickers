@@ -1,0 +1,811 @@
+<!doctype html>
+<html lang="zh-CN">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>表情包</title>
+<meta name="description" content="表情包合集：搜一句话、按心情挑，点一下复制。">
+<meta name="theme-color" content="#faf6f0" media="(prefers-color-scheme: light)">
+<meta name="theme-color" content="#191614" media="(prefers-color-scheme: dark)">
+<link rel="icon" href="tietie.jpeg">
+<link rel="apple-touch-icon" href="tietie.jpeg">
+<style>
+  :root {
+    --bg: #faf6f0;
+    --bar: rgba(250, 246, 240, .86);
+    --surface: #ffffff;
+    --tile: #ffffff;
+    --ink: #2a2421;
+    --muted: #8b8079;
+    --line: #ece3d8;
+    --chip: #f1e9df;
+    --chip-ink: #5b4f48;
+    --accent: #e2654d;
+    --accent-soft: #fbe3dc;
+    --accent-ink: #ffffff;
+    --shadow: 0 1px 2px rgba(70, 45, 25, .06), 0 6px 18px rgba(70, 45, 25, .07);
+    --shadow-lift: 0 2px 4px rgba(70, 45, 25, .08), 0 14px 30px rgba(70, 45, 25, .12);
+    --radius: 16px;
+    color-scheme: light;
+  }
+  @media (prefers-color-scheme: dark) {
+    :root {
+      --bg: #191614;
+      --bar: rgba(25, 22, 20, .86);
+      --surface: #24201d;
+      --tile: #f3eee8;
+      --ink: #f2ece6;
+      --muted: #a2978f;
+      --line: #35302b;
+      --chip: #2d2824;
+      --chip-ink: #d9cfc6;
+      --accent: #f08a72;
+      --accent-soft: #43302a;
+      --accent-ink: #1d1512;
+      --shadow: 0 1px 2px rgba(0, 0, 0, .3), 0 6px 18px rgba(0, 0, 0, .25);
+      --shadow-lift: 0 2px 4px rgba(0, 0, 0, .35), 0 14px 30px rgba(0, 0, 0, .4);
+      color-scheme: dark;
+    }
+  }
+
+  * { box-sizing: border-box; }
+  html { -webkit-text-size-adjust: 100%; }
+  body {
+    margin: 0;
+    background: var(--bg);
+    color: var(--ink);
+    font: 15px/1.55 -apple-system, BlinkMacSystemFont, "PingFang SC", "Hiragino Sans GB", "Microsoft YaHei", "Noto Sans CJK SC", "Segoe UI", sans-serif;
+    -webkit-font-smoothing: antialiased;
+  }
+  body:has(dialog[open]) { overflow: hidden; }
+  button { font: inherit; color: inherit; }
+  .wrap { max-width: 1120px; margin: 0 auto; padding: 0 16px; }
+
+  /* ---------- 顶部 ---------- */
+  header.top { padding: 28px 0 10px; }
+  .title-row { display: flex; align-items: flex-end; justify-content: space-between; gap: 12px; }
+  h1 {
+    margin: 0;
+    font-size: clamp(28px, 6vw, 38px);
+    line-height: 1.1;
+    font-weight: 800;
+    letter-spacing: .02em;
+  }
+  h1 .mark {
+    background: linear-gradient(transparent 62%, var(--accent-soft) 62%, var(--accent-soft) 92%, transparent 92%);
+    padding: 0 2px;
+  }
+  .sub { margin: 6px 0 0; color: var(--muted); font-size: 14px; }
+  .dice {
+    flex: none;
+    display: inline-flex; align-items: center; gap: 6px;
+    border: 1px solid var(--line);
+    background: var(--surface);
+    border-radius: 999px;
+    padding: 8px 14px;
+    cursor: pointer;
+    box-shadow: var(--shadow);
+    font-size: 14px;
+    transition: transform .15s ease;
+  }
+  .dice:hover { transform: translateY(-1px); }
+  .dice:active { transform: scale(.97); }
+  .dice svg { width: 18px; height: 18px; }
+
+  /* ---------- 搜索 + 筛选（吸顶） ---------- */
+  .bar {
+    position: sticky; top: 0; z-index: 5;
+    background: var(--bar);
+    -webkit-backdrop-filter: saturate(1.4) blur(12px);
+    backdrop-filter: saturate(1.4) blur(12px);
+    border-bottom: 1px solid transparent;
+    transition: border-color .2s;
+  }
+  .bar.stuck { border-bottom-color: var(--line); }
+  .bar .wrap { padding-top: 10px; padding-bottom: 10px; }
+  .search {
+    position: relative;
+    display: flex; align-items: center;
+  }
+  .search svg.icon {
+    position: absolute; left: 14px; width: 18px; height: 18px; color: var(--muted); pointer-events: none;
+  }
+  .search input {
+    width: 100%;
+    height: 46px;
+    border: 1px solid var(--line);
+    border-radius: 14px;
+    background: var(--surface);
+    color: var(--ink);
+    padding: 0 44px 0 42px;
+    font: inherit; font-size: 16px;
+    outline: none;
+    transition: border-color .15s, box-shadow .15s;
+  }
+  .search input::placeholder { color: var(--muted); }
+  .search input:focus { border-color: var(--accent); box-shadow: 0 0 0 3px var(--accent-soft); }
+  .search input::-webkit-search-cancel-button { display: none; }
+  .search .clear {
+    position: absolute; right: 8px;
+    width: 30px; height: 30px; border-radius: 50%;
+    border: 0; background: var(--chip); color: var(--chip-ink);
+    cursor: pointer; display: none; place-items: center;
+  }
+  .search .clear svg { width: 14px; height: 14px; }
+  .search.has-q .clear { display: grid; }
+  .search kbd {
+    position: absolute; right: 12px;
+    font: 12px/1 ui-monospace, SFMono-Regular, Menlo, monospace;
+    color: var(--muted); border: 1px solid var(--line); border-radius: 6px; padding: 4px 7px;
+    pointer-events: none;
+  }
+  .search.has-q kbd { display: none; }
+  @media (hover: none) { .search kbd { display: none; } }
+
+  .chips {
+    display: flex; gap: 8px; align-items: center;
+    overflow-x: auto; scrollbar-width: none;
+    margin: 10px -16px 0; padding: 2px 16px;
+    -webkit-overflow-scrolling: touch;
+  }
+  .chips::-webkit-scrollbar { display: none; }
+  .chip {
+    flex: none;
+    border: 0; border-radius: 999px;
+    background: var(--chip); color: var(--chip-ink);
+    padding: 6px 13px;
+    font-size: 14px; cursor: pointer;
+    white-space: nowrap;
+    transition: background .15s, color .15s, transform .1s;
+  }
+  .chip:active { transform: scale(.96); }
+  .chip .n { opacity: .55; font-size: 12px; margin-left: 3px; font-variant-numeric: tabular-nums; }
+  .chip[aria-pressed="true"] { background: var(--ink); color: var(--bg); }
+  .chip[aria-pressed="true"] .n { opacity: .7; }
+  .chip.recent[aria-pressed="false"] { background: var(--accent-soft); color: var(--accent); }
+  .chips .sep { flex: none; width: 1px; height: 18px; background: var(--line); margin: 0 2px; }
+
+  .status { color: var(--muted); font-size: 13px; margin: 14px 0 10px; min-height: 20px; }
+
+  /* ---------- 表情包网格 ---------- */
+  .grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(150px, 1fr));
+    align-items: start;
+    gap: 14px;
+    padding-bottom: 28px;
+  }
+  @media (max-width: 520px) {
+    .grid { grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 10px; }
+  }
+  .card {
+    position: relative;
+    min-width: 0;
+    background: var(--surface);
+    border-radius: var(--radius);
+    box-shadow: var(--shadow);
+    transition: transform .18s ease, box-shadow .18s ease;
+    animation: pop .28s ease both;
+  }
+  @keyframes pop { from { opacity: 0; transform: translateY(6px) scale(.98); } }
+  .card:hover { transform: translateY(-3px); box-shadow: var(--shadow-lift); }
+  .card .open {
+    display: block; width: 100%;
+    border: 0; padding: 6px; margin: 0;
+    background: none; cursor: pointer; text-align: left;
+    border-radius: inherit;
+  }
+  .card .open:focus-visible { outline: 3px solid var(--accent); outline-offset: 2px; }
+  .thumb {
+    display: block;
+    aspect-ratio: 1;
+    background: var(--tile);
+    border-radius: 11px;
+    overflow: hidden;
+  }
+  .thumb img {
+    width: 100%; height: 100%;
+    object-fit: contain;
+    display: block;
+    opacity: 0; transition: opacity .25s;
+  }
+  .thumb img.ok { opacity: 1; }
+  .cap {
+    display: block;
+    padding: 7px 4px 3px;
+    font-size: 13px; line-height: 1.35;
+    color: var(--ink);
+    white-space: nowrap; overflow: hidden; text-overflow: ellipsis;
+  }
+  @media (max-width: 520px) {
+    .card .open { padding: 4px; }
+    .thumb { border-radius: 10px; }
+    .cap { font-size: 12px; padding: 5px 3px 2px; }
+  }
+  .badge {
+    position: absolute; top: 10px; left: 10px;
+    background: var(--accent); color: var(--accent-ink);
+    font-size: 11px; font-weight: 700; padding: 1px 7px; border-radius: 999px;
+    pointer-events: none;
+  }
+  .quick {
+    position: absolute; top: 12px; right: 12px;
+    width: 34px; height: 34px; border-radius: 10px;
+    border: 0; cursor: pointer;
+    background: rgba(30, 22, 18, .72); color: #fff;
+    display: grid; place-items: center;
+    opacity: 0; transform: translateY(-3px);
+    transition: opacity .15s, transform .15s, background .15s;
+  }
+  .quick svg { width: 17px; height: 17px; }
+  .quick:hover { background: var(--accent); }
+  @media (hover: hover) {
+    .card:hover .quick, .quick:focus-visible { opacity: 1; transform: none; }
+  }
+  @media (hover: none) { .quick { display: none; } }
+
+  .empty {
+    grid-column: 1 / -1;
+    text-align: center; padding: 56px 16px 64px; color: var(--muted);
+  }
+  .empty b { display: block; font-size: 17px; color: var(--ink); margin-bottom: 6px; }
+  .empty .try { display: flex; flex-wrap: wrap; justify-content: center; gap: 8px; margin-top: 14px; }
+
+  footer {
+    border-top: 1px solid var(--line);
+    color: var(--muted); font-size: 13px;
+    padding: 18px 0 calc(28px + env(safe-area-inset-bottom));
+  }
+  footer a { color: inherit; }
+  footer code { font-size: 12px; background: var(--chip); padding: 1px 5px; border-radius: 5px; }
+
+  /* ---------- 详情弹窗 ---------- */
+  dialog.sheet {
+    border: 0; padding: 0;
+    width: min(460px, calc(100vw - 32px));
+    max-height: calc(100dvh - 32px);
+    border-radius: 22px;
+    background: var(--surface); color: var(--ink);
+    box-shadow: 0 24px 80px rgba(0, 0, 0, .3);
+    overflow: auto;
+  }
+  dialog.sheet::backdrop { background: rgba(22, 15, 11, .5); -webkit-backdrop-filter: blur(3px); backdrop-filter: blur(3px); }
+  dialog.sheet[open] { animation: rise .22s ease; }
+  @keyframes rise { from { opacity: 0; transform: translateY(14px) scale(.98); } }
+  @media (max-width: 600px) {
+    dialog.sheet {
+      width: 100%; max-width: 100%;
+      margin: auto 0 0;
+      border-radius: 22px 22px 0 0;
+      max-height: 92dvh;
+      padding-bottom: env(safe-area-inset-bottom);
+    }
+    dialog.sheet[open] { animation: slide .26s cubic-bezier(.2, .8, .3, 1); }
+    @keyframes slide { from { transform: translateY(40%); opacity: .4; } }
+  }
+  .grab { display: none; width: 38px; height: 5px; border-radius: 3px; background: var(--line); margin: 8px auto 0; }
+  @media (max-width: 600px) { .grab { display: block; } }
+
+  .viewer { position: relative; padding: 14px 14px 0; }
+  .stage {
+    position: relative;
+    background: var(--tile);
+    border-radius: 16px;
+    height: min(48dvh, 400px);
+    overflow: hidden;
+    touch-action: pan-y;
+  }
+  .stage img {
+    position: absolute; inset: 0;
+    width: 100%; height: 100%;
+    object-fit: contain; display: block;
+    -webkit-touch-callout: default;
+  }
+  .icon-btn {
+    position: absolute;
+    width: 36px; height: 36px; border-radius: 50%;
+    border: 0; cursor: pointer;
+    background: rgba(30, 22, 18, .55); color: #fff;
+    display: grid; place-items: center;
+    transition: background .15s;
+  }
+  .icon-btn:hover { background: rgba(30, 22, 18, .8); }
+  .icon-btn svg { width: 18px; height: 18px; }
+  .x { top: 22px; right: 22px; }
+  .nav { top: calc(14px + min(48dvh, 400px) / 2 - 18px); }
+  .nav.prev { left: 22px; }
+  .nav.next { right: 22px; }
+  .pos {
+    position: absolute; left: 22px; top: 22px;
+    font-size: 12px; font-variant-numeric: tabular-nums;
+    background: rgba(30, 22, 18, .55); color: #fff;
+    padding: 3px 9px; border-radius: 999px;
+  }
+
+  .info { padding: 14px 18px 4px; }
+  .info .text { font-size: 17px; font-weight: 600; line-height: 1.5; margin: 0; word-break: break-word; }
+  .info .meta { display: flex; flex-wrap: wrap; align-items: center; gap: 6px; margin-top: 10px; }
+  .tag {
+    border: 0; cursor: pointer;
+    font-size: 12px; padding: 3px 10px; border-radius: 999px;
+    background: var(--chip); color: var(--chip-ink);
+  }
+  .tag:hover { background: var(--accent-soft); color: var(--accent); }
+  .file { font: 12px ui-monospace, SFMono-Regular, Menlo, monospace; color: var(--muted); margin-left: auto; }
+  .hint-new { font-size: 12px; color: var(--muted); margin: 8px 0 0; }
+
+  .actions {
+    display: grid; grid-template-columns: repeat(3, 1fr); gap: 8px;
+    padding: 14px 18px 18px;
+  }
+  .act {
+    display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 4px;
+    min-height: 58px;
+    border: 1px solid var(--line); border-radius: 14px;
+    background: var(--surface); color: var(--ink);
+    cursor: pointer; font-size: 13px;
+    transition: background .15s, border-color .15s, transform .1s;
+  }
+  .act:hover { border-color: var(--muted); }
+  .act:active { transform: scale(.97); }
+  .act svg { width: 19px; height: 19px; }
+  .act.primary {
+    grid-column: 1 / -1;
+    flex-direction: row; gap: 8px;
+    min-height: 50px;
+    background: var(--accent); border-color: var(--accent); color: var(--accent-ink);
+    font-size: 16px; font-weight: 700;
+  }
+  .act.primary:hover { filter: brightness(1.05); }
+  .keys { text-align: center; font-size: 12px; color: var(--muted); padding: 0 18px 16px; margin-top: -6px; }
+  @media (hover: none) { .keys { display: none; } }
+
+  /* ---------- 提示 ---------- */
+  .toast {
+    position: fixed; left: 50%; bottom: calc(24px + env(safe-area-inset-bottom));
+    transform: translate(-50%, 20px);
+    background: var(--ink); color: var(--bg);
+    padding: 10px 18px; border-radius: 999px;
+    font-size: 14px; font-weight: 600;
+    box-shadow: 0 10px 30px rgba(0, 0, 0, .25);
+    opacity: 0; pointer-events: none;
+    transition: opacity .2s, transform .2s;
+    z-index: 100; max-width: calc(100vw - 32px); text-align: center;
+  }
+  .toast.show { opacity: 1; transform: translate(-50%, 0); }
+
+  @media (prefers-reduced-motion: reduce) {
+    *, *::before, *::after { animation: none !important; transition: none !important; }
+  }
+</style>
+</head>
+<body>
+
+<header class="top">
+  <div class="wrap">
+    <div class="title-row">
+      <div>
+        <h1><span class="mark">表情包</span></h1>
+        <p class="sub" id="sub">点一下就能复制</p>
+      </div>
+      <button class="dice" id="dice" type="button" title="随便来一张">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="3" width="18" height="18" rx="4"/><circle cx="8.5" cy="8.5" r="1.2" fill="currentColor"/><circle cx="15.5" cy="15.5" r="1.2" fill="currentColor"/><circle cx="15.5" cy="8.5" r="1.2" fill="currentColor"/><circle cx="8.5" cy="15.5" r="1.2" fill="currentColor"/><circle cx="12" cy="12" r="1.2" fill="currentColor"/></svg>
+        随便来一张
+      </button>
+    </div>
+  </div>
+</header>
+
+<div class="bar" id="bar">
+  <div class="wrap">
+    <label class="search" id="searchBox">
+      <svg class="icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round"><circle cx="11" cy="11" r="7"/><path d="m20 20-3.5-3.5"/></svg>
+      <input id="q" type="search" placeholder="搜一句话、心情或拼音" autocomplete="off" enterkeyhint="search" aria-label="搜索表情包">
+      <kbd>/</kbd>
+      <button class="clear" id="clear" type="button" aria-label="清空">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.6" stroke-linecap="round"><path d="M6 6l12 12M18 6 6 18"/></svg>
+      </button>
+    </label>
+    <div class="chips" id="chips" role="toolbar" aria-label="筛选"></div>
+  </div>
+</div>
+
+<main class="wrap">
+  <div class="status" id="status" aria-live="polite"></div>
+  <div class="grid" id="grid"></div>
+</main>
+
+<footer>
+  <div class="wrap">
+    加新表情包：把图片放进仓库根目录，再在 <code>stickers.js</code> 里加一行中文和心情。
+    忘了加也会自动出现在这里，标着「新」。
+    · <a href="https://github.com/youmiao999/stickers" target="_blank" rel="noopener">GitHub</a>
+  </div>
+</footer>
+
+<dialog class="sheet" id="sheet" aria-label="表情包详情">
+  <div class="grab"></div>
+  <div class="viewer">
+    <div class="stage" id="stage"><img id="big" alt=""></div>
+    <span class="pos" id="pos"></span>
+    <button class="icon-btn x" id="close" type="button" aria-label="关闭">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round"><path d="M6 6l12 12M18 6 6 18"/></svg>
+    </button>
+    <button class="icon-btn nav prev" id="prev" type="button" aria-label="上一张">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"><path d="m15 18-6-6 6-6"/></svg>
+    </button>
+    <button class="icon-btn nav next" id="next" type="button" aria-label="下一张">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"><path d="m9 18 6-6-6-6"/></svg>
+    </button>
+  </div>
+  <div class="info">
+    <p class="text" id="text"></p>
+    <div class="meta" id="meta"></div>
+    <p class="hint-new" id="hintNew" hidden>这张还没登记中文，在 stickers.js 里加一行就好。</p>
+  </div>
+  <div class="actions">
+    <button class="act primary" data-act="image" type="button">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><rect x="8" y="8" width="13" height="13" rx="3"/><path d="M16 8V6a3 3 0 0 0-3-3H6a3 3 0 0 0-3 3v7a3 3 0 0 0 3 3h2"/></svg>
+      复制图片
+    </button>
+    <button class="act" data-act="link" type="button">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M10 13a5 5 0 0 0 7.5.5l3-3a5 5 0 0 0-7-7l-1.7 1.7"/><path d="M14 11a5 5 0 0 0-7.5-.5l-3 3a5 5 0 0 0 7 7l1.7-1.7"/></svg>
+      复制链接
+    </button>
+    <button class="act" data-act="md" type="button">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="2.5" y="5" width="19" height="14" rx="3"/><path d="M6 15V9l3 3 3-3v6M16 9v6m-2.2-2.2L16 15l2.2-2.2"/></svg>
+      Markdown
+    </button>
+    <button class="act" data-act="download" type="button">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 4v11m-4.5-4.5L12 15l4.5-4.5M5 20h14"/></svg>
+      下载
+    </button>
+  </div>
+  <div class="keys">← → 切换 · C 复制图片 · Esc 关闭</div>
+</dialog>
+
+<div class="toast" id="toast" role="status"></div>
+
+<script src="stickers.js"></script>
+<script>
+(() => {
+  const REPO = 'youmiao999/stickers';
+  const BRANCH = 'main';
+  const IMG_RE = /\.(jpe?g|png|gif|webp)$/i;
+  const MOODS = ['黏人', '撒娇', '爱你', '委屈', '凶凶', '认错', '搞怪'];
+  const WHOS = ['狗', '猫', '小人', '其他'];
+  const RECENT_KEY = 'stickers.recent';
+
+  const $ = (id) => document.getElementById(id);
+  const els = {
+    q: $('q'), searchBox: $('searchBox'), clear: $('clear'), chips: $('chips'),
+    grid: $('grid'), status: $('status'), sub: $('sub'), bar: $('bar'), dice: $('dice'),
+    sheet: $('sheet'), big: $('big'), text: $('text'), meta: $('meta'), pos: $('pos'),
+    hintNew: $('hintNew'), toast: $('toast'),
+  };
+
+  // ---------- 数据 ----------
+  const squash = (s) => String(s || '').toLowerCase().replace(/[\s\-_，。,.!！?？~～、…：:（）()「」"'“”]/g, '');
+  const esc = (s) => String(s || '').replace(/[&<>"']/g, (c) => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c]));
+
+  function prep(s) {
+    const id = s.file.replace(IMG_RE, '');
+    const mood = s.mood || [];
+    return {
+      ...s,
+      id,
+      mood,
+      who: s.who || '',
+      src: s.src || encodeURI(s.file),
+      hay: squash([s.text, s.kw, id, mood.join(''), s.who].join(' ')),
+    };
+  }
+  let all = (window.STICKERS || []).filter((s) => s && s.file).map(prep);
+
+  // ---------- 最近用过（只存在这台设备上） ----------
+  const recent = {
+    get() { try { return JSON.parse(localStorage.getItem(RECENT_KEY)) || []; } catch { return []; } },
+    push(file) {
+      try {
+        const list = recent.get().filter((f) => f !== file);
+        list.unshift(file);
+        localStorage.setItem(RECENT_KEY, JSON.stringify(list.slice(0, 30)));
+      } catch { /* 无痕模式之类，没关系 */ }
+    },
+  };
+
+  // ---------- 筛选状态 ----------
+  const state = { q: '', mood: null, who: null, recent: false };
+  let shown = [];
+
+  function filtered() {
+    let list = all;
+    if (state.recent) {
+      const order = recent.get();
+      const byFile = new Map(all.map((s) => [s.file, s]));
+      list = order.map((f) => byFile.get(f)).filter(Boolean);
+    }
+    if (state.mood) list = list.filter((s) => s.mood.includes(state.mood));
+    if (state.who) list = list.filter((s) => s.who === state.who);
+    const terms = state.q.trim().split(/\s+/).map(squash).filter(Boolean);
+    if (terms.length) list = list.filter((s) => terms.every((t) => s.hay.includes(t)));
+    return list;
+  }
+
+  // ---------- 画筛选按钮 ----------
+  function renderChips() {
+    const count = (fn) => all.filter(fn).length;
+    const recentN = recent.get().filter((f) => all.some((s) => s.file === f)).length;
+    const none = !state.mood && !state.who && !state.recent;
+    let html = `<button class="chip" type="button" data-k="all" aria-pressed="${none}">全部<span class="n">${all.length}</span></button>`;
+    if (recentN) html += `<button class="chip recent" type="button" data-k="recent" aria-pressed="${state.recent}">最近用过<span class="n">${recentN}</span></button>`;
+    html += MOODS.map((m) => `<button class="chip" type="button" data-k="mood" data-v="${m}" aria-pressed="${state.mood === m}">${m}<span class="n">${count((s) => s.mood.includes(m))}</span></button>`).join('');
+    html += '<span class="sep" aria-hidden="true"></span>';
+    html += WHOS.map((w) => `<button class="chip" type="button" data-k="who" data-v="${w}" aria-pressed="${state.who === w}">${w}<span class="n">${count((s) => s.who === w)}</span></button>`).join('');
+    const fresh = all.filter((s) => s.isNew).length;
+    if (fresh) html += `<span class="sep" aria-hidden="true"></span><button class="chip recent" type="button" data-k="q" data-v="新来的" aria-pressed="false">新来的<span class="n">${fresh}</span></button>`;
+    els.chips.innerHTML = html;
+  }
+
+  els.chips.addEventListener('click', (e) => {
+    const b = e.target.closest('.chip');
+    if (!b) return;
+    const { k, v } = b.dataset;
+    if (k === 'all') Object.assign(state, { mood: null, who: null, recent: false });
+    else if (k === 'recent') state.recent = !state.recent;
+    else if (k === 'mood') state.mood = state.mood === v ? null : v;
+    else if (k === 'who') state.who = state.who === v ? null : v;
+    else if (k === 'q') setQuery(v);
+    render();
+  });
+
+  // ---------- 画网格 ----------
+  function render() {
+    renderChips();
+    shown = filtered();
+    els.sub.textContent = `${all.length} 张 · 点一下就能复制`;
+    const narrowed = state.q || state.mood || state.who || state.recent;
+    els.status.textContent = narrowed ? `找到 ${shown.length} 张` : `全部 ${all.length} 张`;
+
+    if (!shown.length) {
+      const ideas = ['贴贴', '凶我', '亲亲', '夸', '哭', '哈士奇'];
+      els.grid.innerHTML = `<div class="empty"><b>没找到这句</b>换个词试试，或者清掉筛选
+        <div class="try">${ideas.map((w) => `<button class="chip" type="button" data-try="${w}">${w}</button>`).join('')}</div></div>`;
+      return;
+    }
+    els.grid.innerHTML = shown.map((s, i) => `
+      <div class="card" style="animation-delay:${Math.min(i, 24) * 14}ms">
+        <button class="open" type="button" data-i="${i}" title="${esc(s.text)}">
+          <span class="thumb"><img src="${esc(s.src)}" alt="${esc(s.text)}" loading="lazy" decoding="async"></span>
+          <span class="cap">${esc(s.text)}</span>
+        </button>
+        ${s.isNew ? '<span class="badge">新</span>' : ''}
+        <button class="quick" type="button" data-quick="${i}" aria-label="复制图片" title="复制图片">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><rect x="8" y="8" width="13" height="13" rx="3"/><path d="M16 8V6a3 3 0 0 0-3-3H6a3 3 0 0 0-3 3v7a3 3 0 0 0 3 3h2"/></svg>
+        </button>
+      </div>`).join('');
+    els.grid.querySelectorAll('img').forEach((img) => {
+      if (img.complete && img.naturalWidth) img.classList.add('ok');
+      else img.addEventListener('load', () => img.classList.add('ok'), { once: true });
+    });
+  }
+
+  els.grid.addEventListener('click', (e) => {
+    const t = e.target.closest('[data-try]');
+    if (t) { Object.assign(state, { mood: null, who: null, recent: false }); setQuery(t.dataset.try); render(); return; }
+    const q = e.target.closest('[data-quick]');
+    if (q) { act('image', shown[+q.dataset.quick]); return; }
+    const o = e.target.closest('[data-i]');
+    if (o) openAt(shown, +o.dataset.i);
+  });
+
+  // ---------- 搜索 ----------
+  function setQuery(v) {
+    els.q.value = v;
+    state.q = v;
+    els.searchBox.classList.toggle('has-q', !!v);
+  }
+  let typing;
+  els.q.addEventListener('input', () => {
+    els.searchBox.classList.toggle('has-q', !!els.q.value);
+    clearTimeout(typing);
+    typing = setTimeout(() => { state.q = els.q.value; render(); }, 80);
+  });
+  els.clear.addEventListener('click', (e) => { e.preventDefault(); setQuery(''); render(); els.q.focus(); });
+
+  // 吸顶时显示一条细线
+  new IntersectionObserver(([en]) => els.bar.classList.toggle('stuck', !en.isIntersecting))
+    .observe(document.querySelector('header.top'));
+
+  // ---------- 详情 ----------
+  let view = [];
+  let cur = 0;
+
+  function openAt(list, i) {
+    view = list;
+    cur = (i + list.length) % list.length;
+    const s = view[cur];
+    els.big.src = s.src;
+    els.big.alt = s.text;
+    els.text.textContent = s.text;
+    els.pos.textContent = `${cur + 1} / ${view.length}`;
+    els.meta.innerHTML =
+      [...s.mood, s.who].filter(Boolean).map((t) => `<button class="tag" type="button" data-tag="${esc(t)}">${esc(t)}</button>`).join('') +
+      `<span class="file">${esc(s.file)}</span>`;
+    els.hintNew.hidden = !s.isNew;
+    if (!els.sheet.open) els.sheet.showModal();
+    history.replaceState(null, '', '#' + encodeURIComponent(s.id));
+  }
+
+  function closeSheet() { if (els.sheet.open) els.sheet.close(); }
+  els.sheet.addEventListener('close', () => history.replaceState(null, '', location.pathname + location.search));
+  $('close').addEventListener('click', closeSheet);
+  $('prev').addEventListener('click', () => openAt(view, cur - 1));
+  $('next').addEventListener('click', () => openAt(view, cur + 1));
+  // 点遮罩关闭
+  els.sheet.addEventListener('click', (e) => { if (e.target === els.sheet) closeSheet(); });
+  // 点标签 = 按这个筛
+  els.meta.addEventListener('click', (e) => {
+    const t = e.target.closest('[data-tag]');
+    if (!t) return;
+    const v = t.dataset.tag;
+    Object.assign(state, { recent: false, q: '' });
+    setQuery('');
+    if (MOODS.includes(v)) { state.mood = v; state.who = null; } else { state.who = v; state.mood = null; }
+    closeSheet();
+    render();
+    window.scrollTo({ top: 0, behavior: 'smooth' });
+  });
+  els.sheet.querySelector('.actions').addEventListener('click', (e) => {
+    const b = e.target.closest('[data-act]');
+    if (b) act(b.dataset.act, view[cur]);
+  });
+
+  // 手机上左右滑切换
+  let x0 = null, y0 = null;
+  $('stage').addEventListener('touchstart', (e) => { x0 = e.touches[0].clientX; y0 = e.touches[0].clientY; }, { passive: true });
+  $('stage').addEventListener('touchend', (e) => {
+    if (x0 === null) return;
+    const dx = e.changedTouches[0].clientX - x0, dy = e.changedTouches[0].clientY - y0;
+    if (Math.abs(dx) > 50 && Math.abs(dx) > Math.abs(dy) * 1.5) openAt(view, cur + (dx < 0 ? 1 : -1));
+    x0 = null;
+  });
+
+  // 键盘
+  document.addEventListener('keydown', (e) => {
+    if (e.metaKey || e.ctrlKey || e.altKey) return;
+    if (els.sheet.open) {
+      if (e.key === 'ArrowLeft') openAt(view, cur - 1);
+      else if (e.key === 'ArrowRight') openAt(view, cur + 1);
+      else if (e.key === 'c' || e.key === 'C') act('image', view[cur]);
+      return;
+    }
+    if (e.key === '/' && document.activeElement !== els.q) { e.preventDefault(); els.q.focus(); els.q.select(); }
+    else if (e.key === 'Escape' && document.activeElement === els.q) { setQuery(''); render(); els.q.blur(); }
+  });
+
+  // 随便来一张
+  els.dice.addEventListener('click', () => {
+    const pool = shown.length ? shown : all;
+    if (pool.length) openAt(pool, Math.floor(Math.random() * pool.length));
+  });
+
+  // ---------- 复制 / 下载 ----------
+  function linkOf(s) {
+    if (s.isNew || /^https?:/.test(s.src)) return s.src;
+    if (location.protocol.startsWith('http')) return new URL(s.file, location.href).href;
+    return `https://raw.githubusercontent.com/${REPO}/${BRANCH}/${encodeURI(s.file)}`;
+  }
+
+  function pngBlob(src) {
+    return new Promise((resolve, reject) => {
+      const img = new Image();
+      img.crossOrigin = 'anonymous';
+      img.onload = () => {
+        try {
+          const c = document.createElement('canvas');
+          c.width = img.naturalWidth; c.height = img.naturalHeight;
+          c.getContext('2d').drawImage(img, 0, 0);
+          c.toBlob((b) => (b ? resolve(b) : reject(new Error('toBlob'))), 'image/png');
+        } catch (err) { reject(err); }
+      };
+      img.onerror = () => reject(new Error('load'));
+      img.src = src;
+    });
+  }
+
+  async function copyText(t) {
+    try { await navigator.clipboard.writeText(t); return true; } catch { /* 走老办法 */ }
+    const ta = document.createElement('textarea');
+    ta.value = t; ta.setAttribute('readonly', ''); ta.style.cssText = 'position:fixed;opacity:0;top:0';
+    (els.sheet.open ? els.sheet : document.body).appendChild(ta);
+    ta.select();
+    let ok = false;
+    try { ok = document.execCommand('copy'); } catch { ok = false; }
+    ta.remove();
+    return ok;
+  }
+
+  async function act(kind, s) {
+    if (!s) return;
+    if (kind === 'image') {
+      try {
+        if (!navigator.clipboard || !window.ClipboardItem) throw new Error('unsupported');
+        // ClipboardItem 里直接放 Promise，Safari 才认这是用户点的
+        await navigator.clipboard.write([new ClipboardItem({ 'image/png': pngBlob(s.src) })]);
+        recent.push(s.file);
+        toast('图片已复制，去粘贴吧');
+      } catch {
+        const ok = await copyText(linkOf(s));
+        toast(ok ? '这里复制不了图片，已改成复制链接' : '复制不了，长按图片保存吧');
+        if (ok) recent.push(s.file);
+      }
+    } else if (kind === 'link') {
+      toast((await copyText(linkOf(s))) ? '链接已复制' : '复制失败');
+      recent.push(s.file);
+    } else if (kind === 'md') {
+      const alt = s.text.replace(/[[\]]/g, '');
+      toast((await copyText(`![${alt}](${linkOf(s)})`)) ? 'Markdown 已复制' : '复制失败');
+      recent.push(s.file);
+    } else if (kind === 'download') {
+      try {
+        const res = await fetch(s.src);
+        if (!res.ok) throw new Error(res.status);
+        const url = URL.createObjectURL(await res.blob());
+        const a = Object.assign(document.createElement('a'), { href: url, download: s.file });
+        document.body.appendChild(a); a.click(); a.remove();
+        setTimeout(() => URL.revokeObjectURL(url), 4000);
+      } catch {
+        window.open(linkOf(s), '_blank', 'noopener');
+      }
+      recent.push(s.file);
+    }
+    if (!state.recent) renderChips();
+  }
+
+  let toastTimer;
+  function toast(msg) {
+    els.toast.textContent = msg;
+    els.toast.classList.add('show');
+    clearTimeout(toastTimer);
+    toastTimer = setTimeout(() => els.toast.classList.remove('show'), 1800);
+  }
+
+  // ---------- 自动找没登记的新图 ----------
+  async function discover() {
+    try {
+      const res = await fetch(`https://api.github.com/repos/${REPO}/contents/?ref=${BRANCH}`, {
+        headers: { Accept: 'application/vnd.github+json' },
+      });
+      if (!res.ok) return;
+      const files = await res.json();
+      const known = new Set(all.map((s) => s.file));
+      const fresh = files.filter((f) => f.type === 'file' && IMG_RE.test(f.name) && !known.has(f.name));
+      if (!fresh.length) return;
+      all = all.concat(fresh.map((f) => prep({
+        file: f.name,
+        text: f.name.replace(IMG_RE, '').replace(/-/g, ' '),
+        kw: '新来的',
+        src: f.download_url,
+        isNew: true,
+      })));
+      render();
+    } catch { /* 连不上 GitHub 就算了 */ }
+  }
+
+  // ---------- 启动 ----------
+  // 链接带 #名字 就直接打开那张，比如 index.html#tietie
+  function openFromHash() {
+    const id = decodeURIComponent(location.hash.slice(1));
+    const i = id ? all.findIndex((s) => s.id === id) : -1;
+    if (i >= 0) openAt(all, i);
+  }
+  window.addEventListener('hashchange', openFromHash);
+
+  render();
+  openFromHash();
+  discover();
+})();
+</script>
+</body>
+</html>
